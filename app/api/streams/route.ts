@@ -1,27 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prismaClient, PrismaClient } from "@/app/lib/db";
+import { prismaClient } from "@/app/lib/db";
 import z from "zod";
-const YT_REGEX = new RegExp(^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$)
+const YT_REGEX = new RegExp("^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$")
 const CreateStreamSchema = z.object({
-    creatorId : z.string(),
-    url :z.string()
+    creatorId: z.string(),
+    url: z.string()
 })
-export async function  POST(req: NextRequest
-){
-    try{
-        const data= CreateStreamSchema.parse(await req.json());
-        const isYT = data.url.includes("youtube");
+export async function POST(req: NextRequest
+) {
+    try {
+        const data = CreateStreamSchema.parse(await req.json());
+        const isYT = YT_REGEX.test(data.url);
 
-        prismaClient.stream.create({
-            userId:data.createId,
-            url:data.url
+        if (!isYT) {
+            return NextResponse.json({
+                message: "wrong url format"
+            }, {
+                status: 411
+            })
+        }
+        const extractedId = data.url.split("?v=")[1];
+
+       await prismaClient.stream.create({
+            data: {
+                extractedId,
+                userId: data.creatorId,
+                url: data.url,
+                type: "Youtube"
+            }
         })
-
-    }catch(e){
+    } catch (e) {
         return NextResponse.json({
-            message:"error while adding stream "
+            message: "error while adding stream"
         },{
-            status:411
+            status: 411
         })
     }
 }
+
