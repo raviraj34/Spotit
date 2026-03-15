@@ -5,8 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -16,6 +15,7 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   email     String    @unique
+  name      String? 
   provider  Provider
   role      Role 
   Streams  Stream[]

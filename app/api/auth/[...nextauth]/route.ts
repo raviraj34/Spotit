@@ -9,22 +9,23 @@ const handler = NextAuth({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? ""
   })
 ],
-callbacks:{
-  async signIn(params){
-    console.log(params);
-    try{
-      await prismaClient.user.create({
-        data:{
-          email:"",
-          provider:"Google"
-        }
-      })
-    } catch(e){
+callbacks: {
+  async signIn({ user }) {
+    await prismaClient.user.upsert({
+      where: { email: user.email! },
+      update: {},
+      create: {
+        email: user.email!,
+        name: user.name!,
+        provider: "Google",
+        role:"EndUser"
+      }
+    })
 
-    }
-    return true;
+    return true
   }
 }
 })
 
 export { handler as GET, handler as POST }
+
