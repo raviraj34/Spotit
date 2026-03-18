@@ -11,14 +11,15 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 model User {
-  id        String   @id @default(uuid())
-  email     String    @unique
-  name      String? 
-  provider  Provider
-  role      Role 
+  id       String   @id @default(uuid())
+  email    String   @unique
+  name     String?
+  provider Provider
+  role     Role
   Streams  Stream[]
-  upvotes   Upvote[]
+  upvotes  Upvote[]
 }
 
 enum Role {
@@ -26,33 +27,35 @@ enum Role {
   EndUser
 }
 
-
 model Stream {
-  id    String   @id   @default(uuid())
-  type  StreamType 
-  active   Boolean   @default(true)
-  upvote  Upvote[] 
-  userId  String 
-  user    User    @relation(fields :[userId], references: [id])
-  url  String
-  extractedId  String
+  id          String     @id @default(uuid())
+  type        StreamType
+  active      Boolean    @default(true)
+  upvote      Upvote[]
+  userId      String
+  title       String?
+  smallImg    String?
+  bigImg      String?
+  user        User       @relation(fields: [userId], references: [id])
+  url         String
+  extractedId String
 }
-
 
 model Upvote {
-  id    String   @id   @default(uuid())
-  userId  String  
-  streamId  String
-  user  User        @relation(fields: [userId] ,references: [id])
-  stream  Stream    @relation(fields: [streamId], references: [id])
-  @@unique([userId, streamId ])
-}
-enum StreamType {
-  Spotify 
-  Youtube 
+  id       String @id @default(uuid())
+  userId   String
+  streamId String
+  user     User   @relation(fields: [userId], references: [id])
+  stream   Stream @relation(fields: [streamId], references: [id])
+
+  @@unique([userId, streamId])
 }
 
+enum StreamType {
+  Spotify
+  Youtube
+}
 
 enum Provider {
-  Google 
+  Google
 }
