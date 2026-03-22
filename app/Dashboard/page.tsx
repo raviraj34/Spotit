@@ -1,5 +1,7 @@
 "use client";
 
+import axios from "axios";
+import { log } from "console";
 import { useState, useEffect, useRef } from "react";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -652,6 +654,20 @@ export default function StreamQDashboard() {
   const [viewers,  setViewers]  = useState(1284);
   const [queue,    setQueue]    = useState(QUEUE_INIT);
   const [chat,     setChat]     = useState(CHAT_INIT);
+  const REFRESH_INTERVAL_MS =10*1000;
+
+async function refreshStreams(){
+  const res = await axios.get("/api/streams/my")
+   console.log(res);
+   
+}
+
+useEffect(()=>{
+  refreshStreams();
+  const interval = setInterval(() => {
+    
+  }, REFRESH_INTERVAL_MS);
+},[])
 
   useEffect(() => {
     if (!playing) return;
