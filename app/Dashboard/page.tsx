@@ -110,6 +110,7 @@ type YouTubePlayerProps = {
   volume: number;
   onEnded?: () => void;
   onProgress?: (progress: number) => void;
+  onVideoMeta?: (meta: { title?: string; author?: string; videoId?: string }) => void;
 };
 
 type SidebarVolumeProps = {
@@ -149,6 +150,11 @@ type YTPlayerInstance = {
   getCurrentTime?: () => number;
   getDuration?: () => number;
   setVolume?: (volume: number) => void;
+  getVideoData?: () => {
+    title?: string;
+    video_id?: string;
+    author?: string;
+  };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -326,11 +332,10 @@ function FilterPill({ label, active, onClick }: FilterPillProps) {
   return (
     <button
       onClick={onClick}
-      className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-        active
+      className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all cursor-pointer ${active
           ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
           : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
-      }`}
+        }`}
     >
       {label}
     </button>
@@ -341,11 +346,10 @@ function PrimaryBtn({ children, onClick, success = false, className = "" }: Prim
   return (
     <button
       onClick={onClick}
-      className={`relative overflow-hidden px-7 py-3 rounded-full font-['Syne'] font-extrabold text-sm tracking-wide transition-all group ${className} ${
-        success
+      className={`relative overflow-hidden px-7 py-3 rounded-full font-['Syne'] font-extrabold text-sm tracking-wide transition-all group ${className} ${success
           ? "bg-[#00f0d4] text-[#07080b] cursor-default"
           : "bg-[#d9ff47] text-[#07080b] hover:bg-[#c4e83a] hover:shadow-[0_8px_32px_#d9ff4748] hover:-translate-y-0.5"
-      }`}
+        }`}
     >
       <span className="relative z-10">{children}</span>
       <span className="absolute top-[-50%] left-[-60%] w-1/2 h-[200%] bg-white/20 -skew-x-[20deg] group-hover:left-[130%] transition-all duration-500 pointer-events-none" />
@@ -357,14 +361,12 @@ function Toggle({ value, onChange }: ToggleProps) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`w-11 h-6 rounded-full relative flex-shrink-0 border transition-all duration-200 ${
-        value ? "bg-[#d9ff47] border-[#d9ff4760]" : "bg-[#13161e] border-[#1a1f2e]"
-      }`}
+      className={`w-11 h-6 rounded-full relative flex-shrink-0 border transition-all duration-200 ${value ? "bg-[#d9ff47] border-[#d9ff4760]" : "bg-[#13161e] border-[#1a1f2e]"
+        }`}
     >
       <span
-        className={`absolute top-[3px] w-[18px] h-[18px] rounded-full shadow transition-all duration-200 ${
-          value ? "left-[22px] bg-[#07080b]" : "left-[3px] bg-[#454d66]"
-        }`}
+        className={`absolute top-[3px] w-[18px] h-[18px] rounded-full shadow transition-all duration-200 ${value ? "left-[22px] bg-[#07080b]" : "left-[3px] bg-[#454d66]"
+          }`}
       />
     </button>
   );
@@ -398,21 +400,22 @@ function YouTubePlayer({
   volume,
   onEnded,
   onProgress,
+  onVideoMeta,
 }: YouTubePlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
-  const player = playerRef.current;
-  if (!player?.setVolume) return;
+    const player = playerRef.current;
+    if (!player?.setVolume) return;
 
-  try {
-    player.setVolume(volume);
-  } catch (error) {
-    console.error("Volume sync failed:", error);
-  }
-}, [volume]);
+    try {
+      player.setVolume(volume);
+    } catch (error) {
+      console.error("Volume sync failed:", error);
+    }
+  }, [volume]);
 
 
   useEffect(() => {
@@ -444,6 +447,14 @@ function YouTubePlayer({
           events: {
             onReady: (e) => {
               e.target.setVolume?.(volume);
+
+              const data = e.target.getVideoData?.();
+              onVideoMeta?.({
+                title: data?.title,
+                author: data?.author,
+                videoId: data?.video_id,
+              });
+
               if (playing) e.target.playVideo?.();
               else e.target.pauseVideo?.();
             },
@@ -663,11 +674,10 @@ function AddSongModal({ onClose, onAdd }: AddSongModalProps) {
                 <button
                   key={g}
                   onClick={() => setGenre(g)}
-                  className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all ${
-                    genre === g
+                  className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all ${genre === g
                       ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
                       : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4]"
-                  }`}
+                    }`}
                 >
                   {g}
                 </button>
@@ -705,9 +715,8 @@ function QueueRow({
 }: QueueRowProps) {
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 border-b border-[#1a1f2e] last:border-0 hover:bg-[#13161e] transition-colors group ${
-        track.playing ? "bg-[#d9ff4706] border-l-[3px] border-l-[#d9ff47]" : ""
-      }`}
+      className={`flex items-center gap-3 px-4 py-3 border-b border-[#1a1f2e] last:border-0 hover:bg-[#13161e] transition-colors group ${track.playing ? "bg-[#d9ff4706] border-l-[3px] border-l-[#d9ff47]" : ""
+        }`}
     >
       <span className="font-mono text-[9px] w-5 text-center flex-shrink-0">
         {track.playing ? (
@@ -740,9 +749,8 @@ function QueueRow({
       </div>
 
       <div
-        className={`font-['Bebas_Neue'] text-xl leading-none min-w-[32px] text-center flex-shrink-0 transition-colors ${
-          track.votes > 0 ? "text-[#d9ff47]" : track.votes < 0 ? "text-[#ff3d7f]" : "text-[#454d66]"
-        }`}
+        className={`font-['Bebas_Neue'] text-xl leading-none min-w-[32px] text-center flex-shrink-0 transition-colors ${track.votes > 0 ? "text-[#d9ff47]" : track.votes < 0 ? "text-[#ff3d7f]" : "text-[#454d66]"
+          }`}
       >
         {track.votes > 0 ? `+${track.votes}` : track.votes}
       </div>
@@ -750,21 +758,19 @@ function QueueRow({
       <div className="flex flex-col gap-0.5 flex-shrink-0">
         <button
           onClick={() => onUpvote(track.id)}
-          className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${
-            userVote === 1
+          className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${userVote === 1
               ? "bg-[#d9ff4720] border-[#d9ff4740] text-[#d9ff47]"
               : "border-[#1a1f2e] text-[#454d66] hover:text-[#d9ff47] hover:border-[#d9ff4730] hover:bg-[#d9ff4710]"
-          }`}
+            }`}
         >
           ▲
         </button>
         <button
           onClick={() => onDownvote(track.id)}
-          className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${
-            userVote === -1
+          className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${userVote === -1
               ? "bg-[#ff3d7f20] border-[#ff3d7f40] text-[#ff3d7f]"
               : "border-[#1a1f2e] text-[#454d66] hover:text-[#ff3d7f] hover:border-[#ff3d7f30] hover:bg-[#ff3d7f10]"
-          }`}
+            }`}
         >
           ▼
         </button>
@@ -798,11 +804,10 @@ function TopBar({ playing, setPlaying, viewers }: TopBarProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setPlaying((p) => !p)}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-[9px] tracking-widest uppercase border transition-all ${
-            playing
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-[9px] tracking-widest uppercase border transition-all ${playing
               ? "bg-[#ff3d7f12] border-[#ff3d7f30] text-[#ff3d7f] hover:bg-[#ff3d7f20]"
               : "bg-[#d9ff4712] border-[#d9ff4730] text-[#d9ff47] hover:bg-[#d9ff4720]"
-          }`}
+            }`}
         >
           <span>{playing ? "⏸" : "▶"}</span>
           <span className="hidden sm:inline">{playing ? "Pause" : "Resume"}</span>
@@ -837,13 +842,54 @@ function LivePage({
   const chatRef = useRef<HTMLDivElement | null>(null);
 
   const nowPlaying = queue[0];
-  const filtered = genre === "All" ? queue : queue.filter((t) => t.genre === genre);
 
+
+
+
+  const filtered = React.useMemo(() => {
+    const current = queue.find((t) => t.playing) ?? queue[0];
+
+    if (!current) return [];
+
+    if (genre === "All") {
+      const rest = queue.filter((t) => t.id !== current.id);
+      return [current, ...rest];
+    }
+
+    const matching = queue.filter((t) => t.genre === genre);
+    const hasCurrent = matching.some((t) => t.id === current.id);
+
+    if (hasCurrent) {
+      const rest = matching.filter((t) => t.id !== current.id);
+      return [current, ...rest];
+    }
+
+    return [current, ...matching];
+  }, [queue, genre]);
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [chat]);
+
+  const handleVideoMeta = useCallback(
+  (meta: { title?: string; author?: string; videoId?: string }) => {
+    if (!meta.title || !nowPlaying) return;
+
+    setQueue((q) =>
+      q.map((track, index) =>
+        index === 0 || track.id === nowPlaying.id
+          ? {
+              ...track,
+              title: meta.title || track.title,
+              artist: meta.author || track.artist,
+            }
+          : track
+      )
+    );
+  },
+  [nowPlaying, setQueue]
+);
 
   const handleUpvote = (id: number) => {
     const prev = userVotes[id] || 0;
@@ -938,7 +984,9 @@ function LivePage({
                 volume={volume}
                 onEnded={handleVideoEnd}
                 onProgress={setProgress}
+                onVideoMeta={handleVideoMeta}
               />
+            
 
               <div className="mt-3">
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -948,11 +996,10 @@ function LivePage({
                   <div className="flex items-center gap-2 flex-shrink-0 mt-1">
                     <button
                       onClick={() => setPlaying((p) => !p)}
-                      className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm transition-all ${
-                        playing
+                      className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm transition-all ${playing
                           ? "border-[#ff3d7f30] text-[#ff3d7f] bg-[#ff3d7f12] hover:bg-[#ff3d7f20]"
                           : "border-[#d9ff4730] text-[#d9ff47] bg-[#d9ff4712] hover:bg-[#d9ff4720]"
-                      }`}
+                        }`}
                     >
                       {playing ? "⏸" : "▶"}
                     </button>
@@ -1068,48 +1115,7 @@ function LivePage({
         </div>
 
         <div className="flex flex-col gap-4 w-full xl:w-[276px] flex-shrink-0">
-          <Card className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <DisplayH size="1.1rem">Volume</DisplayH>
-              <span className="font-mono text-[9px] text-[#d9ff47]">{volume}%</span>
-            </div>
 
-            <div className="flex items-center justify-center py-3">
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs text-[#454d66]">🔊</span>
-
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  className="volume-slider"
-                  style={{
-                    writingMode: "vertical-lr",
-                    WebkitAppearance: "slider-vertical",
-                    width: "8px",
-                    height: "140px",
-                  }}
-                />
-
-                <div className="flex flex-col gap-1 w-full">
-                  <button
-                    onClick={() => setVolume(0)}
-                    className="font-mono text-[8px] uppercase tracking-widest border border-[#1a1f2e] text-[#454d66] hover:text-[#ff3d7f] hover:border-[#ff3d7f30] rounded-lg px-2 py-1 transition-all"
-                  >
-                    Mute
-                  </button>
-                  <button
-                    onClick={() => setVolume(100)}
-                    className="font-mono text-[8px] uppercase tracking-widest border border-[#1a1f2e] text-[#454d66] hover:text-[#d9ff47] hover:border-[#d9ff4730] rounded-lg px-2 py-1 transition-all"
-                  >
-                    Max
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
 
           <Card className="flex flex-col" style={{ height: 300 }}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1f2e] flex-shrink-0">
@@ -1126,9 +1132,8 @@ function LivePage({
               {chat.map((m) => (
                 <div key={m.id}>
                   <span
-                    className={`font-mono text-[9px] mr-1.5 ${
-                      m.creator ? "text-[#d9ff47]" : "text-[#ff3d7f]"
-                    }`}
+                    className={`font-mono text-[9px] mr-1.5 ${m.creator ? "text-[#d9ff47]" : "text-[#ff3d7f]"
+                      }`}
                   >
                     {m.user}
                   </span>
@@ -1293,11 +1298,10 @@ function SettingsPage() {
               <button
                 key={g}
                 onClick={() => setBlocked((b) => (on ? b.filter((x) => x !== g) : [...b, g]))}
-                className={`font-mono text-[9px] tracking-widest uppercase px-3 py-1.5 rounded-full border transition-all ${
-                  on
+                className={`font-mono text-[9px] tracking-widest uppercase px-3 py-1.5 rounded-full border transition-all ${on
                     ? "bg-[#ff3d7f12] border-[#ff3d7f35] text-[#ff3d7f]"
                     : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
-                }`}
+                  }`}
               >
                 {on ? "✕ " : ""}
                 {g}
@@ -1528,6 +1532,7 @@ export default function StreamQDashboard() {
         .volume-slider {
           accent-color: #d9ff47;
           cursor: pointer;
+          
         }
 
         .volume-slider {
@@ -1569,7 +1574,7 @@ export default function StreamQDashboard() {
         }
 
         .volume-slider::-webkit-slider-runnable-track {
-          width: 8px;
+          width: 16px;
           border-radius: 9999px;
           background: #1a1f2e;
         }
@@ -1604,13 +1609,12 @@ export default function StreamQDashboard() {
               <button
                 key={item.id}
                 onClick={() => setPage(item.id)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
-                  page === item.id
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${page === item.id
                     ? item.id === "guide"
                       ? "bg-[#ff3d7f12] text-[#ff3d7f] border-[#ff3d7f22]"
                       : "bg-[#d9ff4712] text-[#d9ff47] border-[#d9ff4722] shadow-[0_0_14px_#d9ff4710]"
                     : "text-[#454d66] hover:text-[#e6e9f4] hover:bg-[#13161e] border-transparent"
-                }`}
+                  }`}
               >
                 <span className="w-4 text-center text-[13px] flex-shrink-0">{item.icon}</span>
                 <span className="hidden lg:block font-['Syne'] font-semibold text-[13px]">
@@ -1768,11 +1772,10 @@ export default function StreamQDashboard() {
                             />
                           </div>
                         </div>
-                
+
                         <div
-                          className={`font-mono text-[9px] min-w-[36px] text-right flex-shrink-0 ${
-                            t.votes >= 0 ? "text-[#d9ff47]" : "text-[#ff3d7f]"
-                          }`}
+                          className={`font-mono text-[9px] min-w-[36px] text-right flex-shrink-0 ${t.votes >= 0 ? "text-[#d9ff47]" : "text-[#ff3d7f]"
+                            }`}
                         >
                           {t.votes >= 0 ? `▲ ${t.votes}` : `▼ ${Math.abs(t.votes)}`}
                         </div>
