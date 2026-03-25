@@ -102,6 +102,8 @@ type LivePageProps = {
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   volume: number;
   setVolume: React.Dispatch<React.SetStateAction<number>>;
+  showModel:boolean;
+  setShowModel:React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type YouTubePlayerProps = {
@@ -834,10 +836,12 @@ function LivePage({
   setChat,
   volume,
   setVolume,
+  showModel,
+  setShowModel
+  
 }: LivePageProps) {
   const [chatInput, setChatInput] = useState("");
   const [genre, setGenre] = useState<string>("All");
-  const [showModal, setShowModal] = useState(false);
   const [userVotes, setUserVotes] = useState<UserVoteMap>({});
   const chatRef = useRef<HTMLDivElement | null>(null);
 
@@ -959,7 +963,7 @@ function LivePage({
 
   return (
     <>
-      {showModal && <AddSongModal onClose={() => setShowModal(false)} onAdd={handleAdd} />}
+      {showModel && <AddSongModal onClose={() => setShowModel(false)} onAdd={handleAdd} />}
 
       <div className="flex flex-col xl:flex-row gap-4 h-full min-h-0">
         <div className="flex flex-col gap-4 flex-1 min-w-0">
@@ -1063,7 +1067,7 @@ function LivePage({
                   ))}
                 </div>
                 <button
-                  onClick={() => setShowModal(true)}
+                  onClick={() => setShowModel(true)}
                   className="flex items-center gap-1.5 bg-[#d9ff47] text-[#07080b] px-3 py-1.5 rounded-full font-['Syne'] font-extrabold text-[11px] hover:bg-[#c4e83a] hover:shadow-[0_4px_20px_#d9ff4740] transition-all"
                 >
                   <span className="text-base leading-none">+</span> Add Song
@@ -1103,7 +1107,7 @@ function LivePage({
                     Queue is empty
                   </div>
                   <button
-                    onClick={() => setShowModal(true)}
+                    onClick={() => setShowModel(true)}
                     className="font-mono text-[9px] text-[#d9ff47] uppercase tracking-widest hover:underline"
                   >
                     + Add the first song
@@ -1180,7 +1184,7 @@ function LivePage({
           </Card>
 
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowModel(true)}
             className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
           >
             <span className="text-2xl">＋</span>
@@ -1455,6 +1459,7 @@ export default function StreamQDashboard() {
   const [queue, setQueue] = useState<Track[]>(QUEUE_INIT);
   const [chat, setChat] = useState<ChatMessage[]>(CHAT_INIT);
   const [volume, setVolume] = useState(70);
+  const [showModel,setShowModel]= useState(false);
 
   const REFRESH_INTERVAL_MS = 10 * 1000;
 
@@ -1660,11 +1665,16 @@ export default function StreamQDashboard() {
                 setChat={setChat}
                 volume={volume}
                 setVolume={setVolume}
+                showModel={showModel}
+                setShowModel={setShowModel}
+                
               />
             )}
 
-            {page === "queue" && (
+            {page === "queue" && showModel &&(
+
               <div className="flex flex-col gap-4">
+                <AddSongModal onClose={()=> setShowModel(false)} onAdd={handleAdd} />
                 <div>
                   <SectionLabel>Manage</SectionLabel>
                   <DisplayH size="clamp(2rem,5vw,3rem)">Full Queue</DisplayH>
@@ -1698,6 +1708,14 @@ export default function StreamQDashboard() {
                       userVote={0}
                     />
                   ))}
+                   <button
+            onClick={() => setShowModel(true)}
+            className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
+          >
+            <span className="text-2xl">＋</span>
+            <span className="font-mono text-[9px] uppercase tracking-widest">Add Song to Queue</span>
+            <span className="font-mono text-[8px] text-[#454d66]">Paste a YouTube link</span>
+          </button>
                 </Card>
               </div>
             )}
