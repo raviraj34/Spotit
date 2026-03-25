@@ -55,7 +55,7 @@ function Navbar({ scrolled }) {
                     <a key={l} href={`#${l.toLowerCase().replace(/ /g, "")}`} className="font-mono text-xs tracking-widest uppercase text-[#454d66] hover:text-[#e6e9f4] transition-colors">{l}</a>
                 ))}
                 <button className="bg-[#d9ff47] text-[#07080b] px-5 py-2 rounded-full font-bold text-sm hover:bg-[#c4e83a] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_30px_#d9ff4748]" onClick={()=>signIn()}>SignIn</button>
-                <a href="#cta" className="bg-[#d9ff47] text-[#07080b] px-5 py-2 rounded-full font-bold text-sm hover:bg-[#c4e83a] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_30px_#d9ff4748]">
+                <a href="/Dashboard" className="bg-[#d9ff47] text-[#07080b] px-5 py-2 rounded-full font-bold text-sm hover:bg-[#c4e83a] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_30px_#d9ff4748]">
                     Start Streaming
                 </a>
             </div>
