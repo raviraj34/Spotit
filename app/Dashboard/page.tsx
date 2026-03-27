@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { log } from "node:console";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,8 +103,8 @@ type LivePageProps = {
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   volume: number;
   setVolume: React.Dispatch<React.SetStateAction<number>>;
-  showModel:boolean;
-  setShowModel:React.Dispatch<React.SetStateAction<boolean>>;
+  showModel: boolean;
+  setShowModel: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type YouTubePlayerProps = {
@@ -335,8 +336,8 @@ function FilterPill({ label, active, onClick }: FilterPillProps) {
     <button
       onClick={onClick}
       className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all cursor-pointer ${active
-          ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
-          : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
+        ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
+        : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
         }`}
     >
       {label}
@@ -349,8 +350,8 @@ function PrimaryBtn({ children, onClick, success = false, className = "" }: Prim
     <button
       onClick={onClick}
       className={`relative overflow-hidden px-7 py-3 rounded-full font-['Syne'] font-extrabold text-sm tracking-wide transition-all group ${className} ${success
-          ? "bg-[#00f0d4] text-[#07080b] cursor-default"
-          : "bg-[#d9ff47] text-[#07080b] hover:bg-[#c4e83a] hover:shadow-[0_8px_32px_#d9ff4748] hover:-translate-y-0.5"
+        ? "bg-[#00f0d4] text-[#07080b] cursor-default"
+        : "bg-[#d9ff47] text-[#07080b] hover:bg-[#c4e83a] hover:shadow-[0_8px_32px_#d9ff4748] hover:-translate-y-0.5"
         }`}
     >
       <span className="relative z-10">{children}</span>
@@ -677,8 +678,8 @@ function AddSongModal({ onClose, onAdd }: AddSongModalProps) {
                   key={g}
                   onClick={() => setGenre(g)}
                   className={`font-mono text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all ${genre === g
-                      ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
-                      : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4]"
+                    ? "bg-[#d9ff4715] border-[#d9ff4735] text-[#d9ff47]"
+                    : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4]"
                     }`}
                 >
                   {g}
@@ -761,8 +762,8 @@ function QueueRow({
         <button
           onClick={() => onUpvote(track.id)}
           className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${userVote === 1
-              ? "bg-[#d9ff4720] border-[#d9ff4740] text-[#d9ff47]"
-              : "border-[#1a1f2e] text-[#454d66] hover:text-[#d9ff47] hover:border-[#d9ff4730] hover:bg-[#d9ff4710]"
+            ? "bg-[#d9ff4720] border-[#d9ff4740] text-[#d9ff47]"
+            : "border-[#1a1f2e] text-[#454d66] hover:text-[#d9ff47] hover:border-[#d9ff4730] hover:bg-[#d9ff4710]"
             }`}
         >
           ▲
@@ -770,8 +771,8 @@ function QueueRow({
         <button
           onClick={() => onDownvote(track.id)}
           className={`w-6 h-5 rounded-md flex items-center justify-center text-[9px] border transition-all ${userVote === -1
-              ? "bg-[#ff3d7f20] border-[#ff3d7f40] text-[#ff3d7f]"
-              : "border-[#1a1f2e] text-[#454d66] hover:text-[#ff3d7f] hover:border-[#ff3d7f30] hover:bg-[#ff3d7f10]"
+            ? "bg-[#ff3d7f20] border-[#ff3d7f40] text-[#ff3d7f]"
+            : "border-[#1a1f2e] text-[#454d66] hover:text-[#ff3d7f] hover:border-[#ff3d7f30] hover:bg-[#ff3d7f10]"
             }`}
         >
           ▼
@@ -807,8 +808,8 @@ function TopBar({ playing, setPlaying, viewers }: TopBarProps) {
         <button
           onClick={() => setPlaying((p) => !p)}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-[9px] tracking-widest uppercase border transition-all ${playing
-              ? "bg-[#ff3d7f12] border-[#ff3d7f30] text-[#ff3d7f] hover:bg-[#ff3d7f20]"
-              : "bg-[#d9ff4712] border-[#d9ff4730] text-[#d9ff47] hover:bg-[#d9ff4720]"
+            ? "bg-[#ff3d7f12] border-[#ff3d7f30] text-[#ff3d7f] hover:bg-[#ff3d7f20]"
+            : "bg-[#d9ff4712] border-[#d9ff4730] text-[#d9ff47] hover:bg-[#d9ff4720]"
             }`}
         >
           <span>{playing ? "⏸" : "▶"}</span>
@@ -838,21 +839,22 @@ function LivePage({
   setVolume,
   showModel,
   setShowModel
-  
+
 }: LivePageProps) {
   const [chatInput, setChatInput] = useState("");
   const [genre, setGenre] = useState<string>("All");
   const [userVotes, setUserVotes] = useState<UserVoteMap>({});
   const chatRef = useRef<HTMLDivElement | null>(null);
 
-  const nowPlaying = queue[0];
+  const nowPlaying = queue?.[0];
 
 
 
 
   const filtered = React.useMemo(() => {
-    const current = queue.find((t) => t.playing) ?? queue[0];
+    if (!queue || queue.length === 0) return [];
 
+    const current = queue.find((t) => t.playing) ?? queue[0];
     if (!current) return [];
 
     if (genre === "All") {
@@ -877,23 +879,23 @@ function LivePage({
   }, [chat]);
 
   const handleVideoMeta = useCallback(
-  (meta: { title?: string; author?: string; videoId?: string }) => {
-    if (!meta.title || !nowPlaying) return;
+    (meta: { title?: string; author?: string; videoId?: string }) => {
+      if (!meta.title || !nowPlaying) return;
 
-    setQueue((q) =>
-      q.map((track, index) =>
-        index === 0 || track.id === nowPlaying.id
-          ? {
+      setQueue((q) =>
+        q.map((track, index) =>
+          index === 0 || track.id === nowPlaying.id
+            ? {
               ...track,
               title: meta.title || track.title,
               artist: meta.author || track.artist,
             }
-          : track
-      )
-    );
-  },
-  [nowPlaying, setQueue]
-);
+            : track
+        )
+      );
+    },
+    [nowPlaying, setQueue]
+  );
 
   const handleUpvote = (id: number) => {
     const prev = userVotes[id] || 0;
@@ -930,10 +932,7 @@ function LivePage({
     });
   };
 
-  const handleAdd = (track: Omit<Track, "id">) => {
-    const newTrack: Track = { ...track, id: Date.now(), playing: false };
-    setQueue((q) => resortQueue([...q, newTrack]));
-  };
+
 
   const handleVideoEnd = useCallback(() => {
     setQueue((q) => {
@@ -963,7 +962,7 @@ function LivePage({
 
   return (
     <>
-      {showModel && <AddSongModal onClose={() => setShowModel(false)} onAdd={handleAdd} />}
+
 
       <div className="flex flex-col xl:flex-row gap-4 h-full min-h-0">
         <div className="flex flex-col gap-4 flex-1 min-w-0">
@@ -981,7 +980,7 @@ function LivePage({
                   </span>
                 </div>
               </div>
-
+            
               <YouTubePlayer
                 videoId={nowPlaying.ytId}
                 playing={playing}
@@ -1001,8 +1000,8 @@ function LivePage({
                     <button
                       onClick={() => setPlaying((p) => !p)}
                       className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm transition-all ${playing
-                          ? "border-[#ff3d7f30] text-[#ff3d7f] bg-[#ff3d7f12] hover:bg-[#ff3d7f20]"
-                          : "border-[#d9ff4730] text-[#d9ff47] bg-[#d9ff4712] hover:bg-[#d9ff4720]"
+                        ? "border-[#ff3d7f30] text-[#ff3d7f] bg-[#ff3d7f12] hover:bg-[#ff3d7f20]"
+                        : "border-[#d9ff4730] text-[#d9ff47] bg-[#d9ff4712] hover:bg-[#d9ff4720]"
                         }`}
                     >
                       {playing ? "⏸" : "▶"}
@@ -1090,17 +1089,25 @@ function LivePage({
             </div>
 
             <div className="overflow-y-auto flex-1 sq-scroll">
-              {filtered.map((t, i) => (
-                <QueueRow
-                  key={t.id}
-                  track={t}
-                  rank={i + 1}
-                  onUpvote={handleUpvote}
-                  onDownvote={handleDownvote}
-                  onRemove={handleRemove}
-                  userVote={userVotes[t.id] || 0}
-                />
-              ))}
+             {filtered?.length > 0 ? (
+  filtered.map((t, i) => {
+    if (!t || !t.id) return null; // safety
+
+    return (
+      <QueueRow
+        key={t.id}
+        track={t}
+        rank={i + 1}
+        onUpvote={handleUpvote}
+        onDownvote={handleDownvote}
+        onRemove={handleRemove}
+        userVote={userVotes[t.id] || 0}
+      />
+    );
+  })
+) : (
+  <div className="text-gray-500 text-xs p-4">Queue is empty</div>
+)}
               {filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-24 gap-2">
                   <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
@@ -1184,7 +1191,7 @@ function LivePage({
           </Card>
 
           <button
-            onClick={() => setShowModel(true)}
+            onClick={() => setShowModel(true)  }
             className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
           >
             <span className="text-2xl">＋</span>
@@ -1303,8 +1310,8 @@ function SettingsPage() {
                 key={g}
                 onClick={() => setBlocked((b) => (on ? b.filter((x) => x !== g) : [...b, g]))}
                 className={`font-mono text-[9px] tracking-widest uppercase px-3 py-1.5 rounded-full border transition-all ${on
-                    ? "bg-[#ff3d7f12] border-[#ff3d7f35] text-[#ff3d7f]"
-                    : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
+                  ? "bg-[#ff3d7f12] border-[#ff3d7f35] text-[#ff3d7f]"
+                  : "border-[#1a1f2e] text-[#454d66] hover:text-[#e6e9f4] hover:border-[#454d66]"
                   }`}
               >
                 {on ? "✕ " : ""}
@@ -1459,7 +1466,7 @@ export default function StreamQDashboard() {
   const [queue, setQueue] = useState<Track[]>(QUEUE_INIT);
   const [chat, setChat] = useState<ChatMessage[]>(CHAT_INIT);
   const [volume, setVolume] = useState(70);
-  const [showModel,setShowModel]= useState(false);
+  const [showModel, setShowModel] = useState(false);
 
   const REFRESH_INTERVAL_MS = 10 * 1000;
 
@@ -1471,6 +1478,19 @@ export default function StreamQDashboard() {
       console.error("Failed to refresh streams:", error);
     }
   }, []);
+
+
+console.log("RENDER PARENT", showModel);
+
+  const handleAdd = (track: Omit<Track, "id">) => {
+    const newTrack: Track = {
+      ...track,
+      id: Date.now(),
+      playing: false,
+    };
+
+    setQueue((q) => resortQueue([...q, newTrack]));
+  };
 
   useEffect(() => {
     refreshStreams();
@@ -1509,9 +1529,23 @@ export default function StreamQDashboard() {
 
     return () => window.clearInterval(iv);
   }, []);
+console.log("MOUNT");
 
+useEffect(() => {
+  console.log("Mounted once");
+}, []);
   return (
     <>
+    {showModel && (
+  <AddSongModal
+    onClose={() => setShowModel(false)}
+    onAdd={(track) => {
+      handleAdd(track);
+      setShowModel(false);
+      console.log("btn clicked")
+    }}
+  />
+)}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
         @keyframes sqBar {
@@ -1615,10 +1649,10 @@ export default function StreamQDashboard() {
                 key={item.id}
                 onClick={() => setPage(item.id)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${page === item.id
-                    ? item.id === "guide"
-                      ? "bg-[#ff3d7f12] text-[#ff3d7f] border-[#ff3d7f22]"
-                      : "bg-[#d9ff4712] text-[#d9ff47] border-[#d9ff4722] shadow-[0_0_14px_#d9ff4710]"
-                    : "text-[#454d66] hover:text-[#e6e9f4] hover:bg-[#13161e] border-transparent"
+                  ? item.id === "guide"
+                    ? "bg-[#ff3d7f12] text-[#ff3d7f] border-[#ff3d7f22]"
+                    : "bg-[#d9ff4712] text-[#d9ff47] border-[#d9ff4722] shadow-[0_0_14px_#d9ff4710]"
+                  : "text-[#454d66] hover:text-[#e6e9f4] hover:bg-[#13161e] border-transparent"
                   }`}
               >
                 <span className="w-4 text-center text-[13px] flex-shrink-0">{item.icon}</span>
@@ -1654,7 +1688,7 @@ export default function StreamQDashboard() {
           <TopBar playing={playing} setPlaying={setPlaying} viewers={viewers} />
           <main className="flex-1 overflow-y-auto p-4 lg:p-5 sq-scroll">
             {page === "live" && (
-              <LivePage
+              <LivePage 
                 queue={queue}
                 setQueue={setQueue}
                 playing={playing}
@@ -1667,58 +1701,82 @@ export default function StreamQDashboard() {
                 setVolume={setVolume}
                 showModel={showModel}
                 setShowModel={setShowModel}
-                
+
               />
             )}
 
-            {page === "queue" && showModel &&(
+            {page === "queue" && (
+  <div className="flex flex-col gap-4">
 
-              <div className="flex flex-col gap-4">
-                <AddSongModal onClose={()=> setShowModel(false)} onAdd={handleAdd} />
-                <div>
-                  <SectionLabel>Manage</SectionLabel>
-                  <DisplayH size="clamp(2rem,5vw,3rem)">Full Queue</DisplayH>
-                </div>
-                <Card>
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1f2e]">
-                    <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
-                      {queue.length} tracks
-                    </div>
-                  </div>
-                  {queue.map((t, i) => (
-                    <QueueRow
-                      key={t.id}
-                      track={t}
-                      rank={i + 1}
-                      onUpvote={(id) =>
-                        setQueue((q) =>
-                          resortQueue(
-                            q.map((x) => (x.id === id ? { ...x, votes: x.votes + 1 } : x))
-                          )
-                        )
-                      }
-                      onDownvote={(id) =>
-                        setQueue((q) =>
-                          resortQueue(
-                            q.map((x) => (x.id === id ? { ...x, votes: x.votes - 1 } : x))
-                          )
-                        )
-                      }
-                      onRemove={(id) => setQueue((q) => q.filter((x) => x.id !== id))}
-                      userVote={0}
-                    />
-                  ))}
-                   <button
-            onClick={() => setShowModel(true)}
-            className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
-          >
-            <span className="text-2xl">＋</span>
-            <span className="font-mono text-[9px] uppercase tracking-widest">Add Song to Queue</span>
-            <span className="font-mono text-[8px] text-[#454d66]">Paste a YouTube link</span>
-          </button>
-                </Card>
-              </div>
-            )}
+    {/* ✅ Modal independent */}
+    
+
+    {/* ✅ Queue UI ALWAYS visible */}
+    <div>
+      <SectionLabel>Manage</SectionLabel>
+      <DisplayH size="clamp(2rem,5vw,3rem)">Full Queue</DisplayH>
+    </div>
+
+    <Card>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1f2e]">
+        <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
+          {queue.length} tracks
+        </div>
+      </div>
+
+      {queue.length > 0 ? (
+        queue.map((t, i) => (
+          <QueueRow
+            key={t.id}
+            track={t}
+            rank={i + 1}
+            onUpvote={(id) =>
+              setQueue((q) =>
+                resortQueue(
+                  q.map((x) =>
+                    x.id === id ? { ...x, votes: x.votes + 1 } : x
+                  )
+                )
+              )
+            }
+            onDownvote={(id) =>
+              setQueue((q) =>
+                resortQueue(
+                  q.map((x) =>
+                    x.id === id ? { ...x, votes: x.votes - 1 } : x
+                  )
+                )
+              )
+            }
+            onRemove={(id) =>
+              setQueue((q) => q.filter((x) => x.id !== id))
+            }
+            userVote={0}
+          />
+        ))
+      ) : (
+        <div className="text-gray-500 p-4 text-center">
+          Queue is empty
+        </div>
+      )}
+
+      {/* ✅ Button */}
+      <button
+        onClick={() => {setShowModel(true)
+          console.log("btn working")
+         } }
+        className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
+      >
+        <span className="text-2xl">＋</span>
+        <span className="font-mono text-[9px] uppercase tracking-widest">
+          Add Song to Queue
+        </span>
+      </button>
+    </Card>
+  </div>
+)}
+
+
 
             {page === "settings" && <SettingsPage />}
             {page === "guide" && <GuidePage />}
