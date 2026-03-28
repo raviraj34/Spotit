@@ -149,6 +149,7 @@ declare global {
 }
 
 type YTPlayerInstance = {
+  loadVideoById: (videoId: string) => void;
   destroy: () => void;
   playVideo?: () => void;
   pauseVideo?: () => void;
@@ -411,6 +412,8 @@ function YouTubePlayer({
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const intervalRef = useRef<number | null>(null);
 
+
+
   useEffect(() => {
     const player = playerRef.current;
     if (!player?.setVolume) return;
@@ -422,6 +425,17 @@ function YouTubePlayer({
     }
   }, [volume]);
 
+  useEffect(() => {
+  if (!playerRef.current || !videoId) return;
+
+  console.log("LOADING VIDEO:", videoId);
+
+  try {
+    playerRef.current.loadVideoById(videoId);
+  } catch (e) {
+    console.error("loadVideo failed", e);
+  }
+}, [videoId]);
 
   useEffect(() => {
     let mounted = true;
@@ -431,13 +445,16 @@ function YouTubePlayer({
 
       try {
         await loadYouTubeAPI();
+
         if (!mounted || !containerRef.current || !window.YT?.Player) return;
 
+        // ✅ destroy old player (only if re-initializing)
         if (playerRef.current) {
           playerRef.current.destroy();
           playerRef.current = null;
         }
 
+        // ✅ CREATE NEW PLAYER
         playerRef.current = new window.YT.Player(containerRef.current, {
           videoId,
           playerVars: {
@@ -451,8 +468,12 @@ function YouTubePlayer({
           },
           events: {
             onReady: (e) => {
+              console.log("YT Ready");
+
+              // volume sync
               e.target.setVolume?.(volume);
 
+              // metadata
               const data = e.target.getVideoData?.();
               onVideoMeta?.({
                 title: data?.title,
@@ -460,14 +481,17 @@ function YouTubePlayer({
                 videoId: data?.video_id,
               });
 
+              // play / pause sync
               if (playing) e.target.playVideo?.();
               else e.target.pauseVideo?.();
             },
+
             onStateChange: (e) => {
               if (e.data === window.YT?.PlayerState.ENDED) {
                 onEnded?.();
               }
             },
+
             onError: (e) => {
               console.error("YouTube player error:", e.data);
               if ([2, 5, 100, 101, 150].includes(e.data)) {
@@ -480,7 +504,6 @@ function YouTubePlayer({
         console.error("Failed to initialize YouTube player:", error);
       }
     }
-
     initPlayer();
 
     return () => {
@@ -494,7 +517,7 @@ function YouTubePlayer({
         playerRef.current = null;
       }
     };
-  }, [videoId, onEnded, playing]);
+  }, []);
 
   useEffect(() => {
     if (intervalRef.current !== null) {
@@ -726,11 +749,11 @@ function QueueRow({
         }`}
     >
       <button onClick={() => {
-  console.log("clicked row", track);
-  onPlayRequest(track);
-}}>
-  ▶ Play
-</button>
+        console.log("clicked row", track);
+        onPlayRequest(track);
+      }}>
+        ▶ Play
+      </button>
       <span className="font-mono text-[9px] w-5 text-center flex-shrink-0">
         {track.playing ? (
           <span className="text-[#d9ff47] text-xs">▶</span>
@@ -856,7 +879,7 @@ function LivePage({
   const [userVotes, setUserVotes] = useState<UserVoteMap>({});
   const chatRef = useRef<HTMLDivElement | null>(null);
 
-  const nowPlaying = queue?.[0];
+  const nowPlaying = queue.find((t) => t.playing || queue[0]);
 
 
 
@@ -992,12 +1015,14 @@ function LivePage({
               </div>
 
               <YouTubePlayer
+                key={nowPlaying.ytId}
                 videoId={nowPlaying.ytId}
                 playing={playing}
                 volume={volume}
                 onEnded={handleVideoEnd}
                 onProgress={setProgress}
                 onVideoMeta={handleVideoMeta}
+
               />
 
 
@@ -1480,6 +1505,7 @@ export default function StreamQDashboard() {
   const [showModel, setShowModel] = useState(false);
   const [selectTrack, setselectTrack] = useState<Track | null>(null);
   const [showPlayModel, setShowPlayModel] = useState(false);
+  const [player, setPlayer] = useState<any>(null)
   const REFRESH_INTERVAL_MS = 10 * 1000;
 
   const refreshStreams = useCallback(async () => {
@@ -1803,7 +1829,7 @@ export default function StreamQDashboard() {
                             )
                           )
                         }
-                        
+
                         onPlayRequest={handlePlayRequest}
 
                         onDownvote={(id) =>
