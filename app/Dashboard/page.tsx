@@ -84,6 +84,7 @@ type QueueRowProps = {
   onDownvote: (id: number) => void;
   onRemove: (id: number) => void;
   userVote: 1 | -1 | 0;
+  onPlayRequest: (track: Track) => void;
 };
 
 type TopBarProps = {
@@ -105,6 +106,7 @@ type LivePageProps = {
   setVolume: React.Dispatch<React.SetStateAction<number>>;
   showModel: boolean;
   setShowModel: React.Dispatch<React.SetStateAction<boolean>>;
+  onPlayRequest: (track: Track) => void;
 };
 
 type YouTubePlayerProps = {
@@ -715,12 +717,20 @@ function QueueRow({
   onDownvote,
   onRemove,
   userVote,
+  onPlayRequest
+
 }: QueueRowProps) {
   return (
     <div
       className={`flex items-center gap-3 px-4 py-3 border-b border-[#1a1f2e] last:border-0 hover:bg-[#13161e] transition-colors group ${track.playing ? "bg-[#d9ff4706] border-l-[3px] border-l-[#d9ff47]" : ""
         }`}
     >
+      <button onClick={() => {
+  console.log("clicked row", track);
+  onPlayRequest(track);
+}}>
+  ▶ Play
+</button>
       <span className="font-mono text-[9px] w-5 text-center flex-shrink-0">
         {track.playing ? (
           <span className="text-[#d9ff47] text-xs">▶</span>
@@ -838,8 +848,8 @@ function LivePage({
   volume,
   setVolume,
   showModel,
-  setShowModel
-
+  setShowModel,
+  onPlayRequest
 }: LivePageProps) {
   const [chatInput, setChatInput] = useState("");
   const [genre, setGenre] = useState<string>("All");
@@ -980,7 +990,7 @@ function LivePage({
                   </span>
                 </div>
               </div>
-            
+
               <YouTubePlayer
                 videoId={nowPlaying.ytId}
                 playing={playing}
@@ -989,7 +999,7 @@ function LivePage({
                 onProgress={setProgress}
                 onVideoMeta={handleVideoMeta}
               />
-            
+
 
               <div className="mt-3">
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -1089,25 +1099,26 @@ function LivePage({
             </div>
 
             <div className="overflow-y-auto flex-1 sq-scroll">
-             {filtered?.length > 0 ? (
-  filtered.map((t, i) => {
-    if (!t || !t.id) return null; // safety
+              {filtered?.length > 0 ? (
+                filtered.map((t, i) => {
+                  if (!t || !t.id) return null; // safety
 
-    return (
-      <QueueRow
-        key={t.id}
-        track={t}
-        rank={i + 1}
-        onUpvote={handleUpvote}
-        onDownvote={handleDownvote}
-        onRemove={handleRemove}
-        userVote={userVotes[t.id] || 0}
-      />
-    );
-  })
-) : (
-  <div className="text-gray-500 text-xs p-4">Queue is empty</div>
-)}
+                  return (
+                    <QueueRow
+                      key={t.id}
+                      track={t}
+                      rank={i + 1}
+                      onUpvote={handleUpvote}
+                      onDownvote={handleDownvote}
+                      onRemove={handleRemove}
+                      userVote={userVotes[t.id] || 0}
+                      onPlayRequest={onPlayRequest}
+                    />
+                  );
+                })
+              ) : (
+                <div className="text-gray-500 text-xs p-4">Queue is empty</div>
+              )}
               {filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-24 gap-2">
                   <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
@@ -1191,7 +1202,7 @@ function LivePage({
           </Card>
 
           <button
-            onClick={() => setShowModel(true)  }
+            onClick={() => setShowModel(true)}
             className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
           >
             <span className="text-2xl">＋</span>
@@ -1467,7 +1478,8 @@ export default function StreamQDashboard() {
   const [chat, setChat] = useState<ChatMessage[]>(CHAT_INIT);
   const [volume, setVolume] = useState(70);
   const [showModel, setShowModel] = useState(false);
-
+  const [selectTrack, setselectTrack] = useState<Track | null>(null);
+  const [showPlayModel, setShowPlayModel] = useState(false);
   const REFRESH_INTERVAL_MS = 10 * 1000;
 
   const refreshStreams = useCallback(async () => {
@@ -1480,8 +1492,13 @@ export default function StreamQDashboard() {
   }, []);
 
 
-console.log("RENDER PARENT", showModel);
+  console.log("RENDER PARENT", showModel);
 
+  const handlePlayRequest = (track: Track) => {
+    setselectTrack(track);
+    setShowPlayModel(true);
+
+  }
   const handleAdd = (track: Omit<Track, "id">) => {
     const newTrack: Track = {
       ...track,
@@ -1492,6 +1509,18 @@ console.log("RENDER PARENT", showModel);
     setQueue((q) => resortQueue([...q, newTrack]));
   };
 
+  const handlePlayNow = () => {
+    if (!selectTrack) return;
+
+    setQueue((q) =>
+      q.map((t) => ({
+        ...t,
+        playing: t.id === selectTrack.id,
+      }))
+    );
+
+    setShowPlayModel(false);
+  };
   useEffect(() => {
     refreshStreams();
 
@@ -1501,6 +1530,7 @@ console.log("RENDER PARENT", showModel);
 
     return () => window.clearInterval(interval);
   }, [refreshStreams]);
+
 
   const navWithGuide = [...NAV, { icon: "?", label: "YT Guide", id: "guide" }];
 
@@ -1529,23 +1559,56 @@ console.log("RENDER PARENT", showModel);
 
     return () => window.clearInterval(iv);
   }, []);
-console.log("MOUNT");
+  console.log("MOUNT");
 
-useEffect(() => {
-  console.log("Mounted once");
-}, []);
+  useEffect(() => {
+    console.log("Mounted once");
+  }, []);
   return (
     <>
-    {showModel && (
-  <AddSongModal
-    onClose={() => setShowModel(false)}
-    onAdd={(track) => {
-      handleAdd(track);
-      setShowModel(false);
-      console.log("btn clicked")
-    }}
-  />
-)}
+
+      {showPlayModel && selectTrack && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
+          <div className="bg-[#111] p-6 rounded-xl text-white w-[320px]">
+
+            <h2 className="text-lg mb-2">Play this song?</h2>
+
+            <p className="text-sm text-gray-400">
+              {selectTrack.title}
+            </p>
+
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => {
+                  handlePlayNow();
+                }}
+                className="text-green-400"
+              >
+                Play
+              </button>
+
+              <button
+                onClick={() => setShowPlayModel(false)}
+                className="text-red-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {showModel && (
+        <AddSongModal
+          onClose={() => setShowModel(false)}
+          onAdd={(track) => {
+            handleAdd(track);
+            setShowModel(false);
+            console.log("btn clicked")
+          }}
+        />
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
         @keyframes sqBar {
@@ -1688,7 +1751,7 @@ useEffect(() => {
           <TopBar playing={playing} setPlaying={setPlaying} viewers={viewers} />
           <main className="flex-1 overflow-y-auto p-4 lg:p-5 sq-scroll">
             {page === "live" && (
-              <LivePage 
+              <LivePage
                 queue={queue}
                 setQueue={setQueue}
                 playing={playing}
@@ -1701,80 +1764,86 @@ useEffect(() => {
                 setVolume={setVolume}
                 showModel={showModel}
                 setShowModel={setShowModel}
-
+                onPlayRequest={handlePlayRequest}
               />
             )}
 
             {page === "queue" && (
-  <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4">
 
-    {/* ✅ Modal independent */}
-    
+                {/* ✅ Modal independent */}
 
-    {/* ✅ Queue UI ALWAYS visible */}
-    <div>
-      <SectionLabel>Manage</SectionLabel>
-      <DisplayH size="clamp(2rem,5vw,3rem)">Full Queue</DisplayH>
-    </div>
 
-    <Card>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1f2e]">
-        <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
-          {queue.length} tracks
-        </div>
-      </div>
+                {/* ✅ Queue UI ALWAYS visible */}
+                <div>
+                  <SectionLabel>Manage</SectionLabel>
+                  <DisplayH size="clamp(2rem,5vw,3rem)">Full Queue</DisplayH>
+                </div>
 
-      {queue.length > 0 ? (
-        queue.map((t, i) => (
-          <QueueRow
-            key={t.id}
-            track={t}
-            rank={i + 1}
-            onUpvote={(id) =>
-              setQueue((q) =>
-                resortQueue(
-                  q.map((x) =>
-                    x.id === id ? { ...x, votes: x.votes + 1 } : x
-                  )
-                )
-              )
-            }
-            onDownvote={(id) =>
-              setQueue((q) =>
-                resortQueue(
-                  q.map((x) =>
-                    x.id === id ? { ...x, votes: x.votes - 1 } : x
-                  )
-                )
-              )
-            }
-            onRemove={(id) =>
-              setQueue((q) => q.filter((x) => x.id !== id))
-            }
-            userVote={0}
-          />
-        ))
-      ) : (
-        <div className="text-gray-500 p-4 text-center">
-          Queue is empty
-        </div>
-      )}
+                <Card>
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1f2e]">
+                    <div className="font-mono text-[9px] text-[#454d66] uppercase tracking-widest">
+                      {queue.length} tracks
+                    </div>
+                  </div>
 
-      {/* ✅ Button */}
-      <button
-        onClick={() => {setShowModel(true)
-          console.log("btn working")
-         } }
-        className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
-      >
-        <span className="text-2xl">＋</span>
-        <span className="font-mono text-[9px] uppercase tracking-widest">
-          Add Song to Queue
-        </span>
-      </button>
-    </Card>
-  </div>
-)}
+                  {queue.length > 0 ? (
+
+                    queue.map((t, i) => (
+                      <QueueRow
+                        key={t.id}
+                        track={t}
+                        rank={i + 1}
+                        onUpvote={(id) =>
+                          setQueue((q) =>
+                            resortQueue(
+                              q.map((x) =>
+                                x.id === id ? { ...x, votes: x.votes + 1 } : x
+                              )
+                            )
+                          )
+                        }
+                        
+                        onPlayRequest={handlePlayRequest}
+
+                        onDownvote={(id) =>
+                          setQueue((q) =>
+                            resortQueue(
+                              q.map((x) =>
+                                x.id === id ? { ...x, votes: x.votes - 1 } : x
+                              )
+                            )
+                          )
+                        }
+                        onRemove={(id) =>
+                          setQueue((q) => q.filter((x) => x.id !== id))
+                        }
+                        userVote={0}
+
+                      />
+                    ))
+                  ) : (
+                    <div className="text-gray-500 p-4 text-center">
+                      Queue is empty
+                    </div>
+                  )}
+
+                  {/* ✅ Button */}
+                  <button
+                    onClick={() => {
+                      setShowModel(true)
+                      console.log("btn working")
+                    }}
+                    className="relative overflow-hidden w-full border border-dashed border-[#d9ff4730] bg-[#d9ff4706] hover:bg-[#d9ff4710] hover:border-[#d9ff4750] text-[#d9ff47] rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
+                  >
+                    <span className="text-2xl">＋</span>
+                    <span className="font-mono text-[9px] uppercase tracking-widest">
+                      Add Song to Queue
+                    </span>
+                  </button>
+                </Card>
+              </div>
+            )}
 
 
 
