@@ -10,8 +10,6 @@ export default function Home() {
   return (
     <main>
       <StreamQLanding />
-    <Appbar />
-      <h2>hello world</h2>
     </main>
   );
 }
